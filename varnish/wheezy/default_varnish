@@ -1,0 +1,70 @@
+# Configuration file for varnish
+#
+# /etc/init.d/varnish expects the variables $DAEMON_OPTS, $NFILES and $MEMLOCK
+# to be set from this shell script fragment.
+#
+ 
+# Should we start varnishd at boot?  Set to "yes" to enable.
+START=yes
+ 
+# Maximum number of open files (for ulimit -n)
+NFILES=131072
+ 
+# Maximum locked memory size (for ulimit -l)
+# Used for locking the shared memory log in memory.  If you increase log size,
+# you need to increase this number as well
+MEMLOCK=82000
+ 
+# Default varnish instance name is the local nodename.  Can be overridden with
+# the -n switch, to have more instances on a single server.
+INSTANCE=$(uname -n)
+ 
+VARNISH_VCL_CONF=/etc/varnish/default.vcl
+#
+# Default address and port to bind to
+# Blank address means all IPv4 and IPv6 interfaces, otherwise specify
+# a host name, an IPv4 dotted quad, or an IPv6 address in brackets.
+VARNISH_LISTEN_ADDRESS=
+VARNISH_LISTEN_PORT=80
+ 
+# Telnet admin interface listen address and port
+VARNISH_ADMIN_LISTEN_ADDRESS=127.0.0.1
+VARNISH_ADMIN_LISTEN_PORT=2000
+ 
+# The minimum number of worker threads to start
+VARNISH_MIN_THREADS=100
+ 
+# The Maximum number of worker threads to start
+VARNISH_MAX_THREADS=4000
+ 
+# The delay between the launching of each thread (in ms)
+VARNISH_THREAD_DELAY=2
+ 
+# Number of thread pools
+VARNISH_THREAD_POOLS=8
+ 
+# To avoid context switching hell when you starve your CPU (and in general), letting each thread wait for new requests is essential. (in ms)
+VARNISH_SESSION_LINGER=50
+ 
+# Session workspace : Min : 16k, max 5m (if ESI is in use)
+VARNISH_SESSION_WORKSPACE=16384
+ 
+# Cache file location
+VARNISH_STORAGE_FILE=/var/lib/varnish/varnish_storage.bin
+ 
+# Cache file size: in bytes, optionally using k / M / G / T suffix,
+# or in percentage of available disk space using the % suffix.
+VARNISH_STORAGE_SIZE=3G
+ 
+# Backend storage specification
+VARNISH_STORAGE="persistent,${VARNISH_STORAGE_FILE},${VARNISH_STORAGE_SIZE}"
+ 
+# DAEMON_OPTS is used by the init script.  If you add or remove options, make
+# sure you update this section, too.
+DAEMON_OPTS="-a ${VARNISH_LISTEN_ADDRESS}:${VARNISH_LISTEN_PORT} \
+             -f ${VARNISH_VCL_CONF} \
+             -T ${VARNISH_ADMIN_LISTEN_ADDRESS}:${VARNISH_ADMIN_LISTEN_PORT} \
+             -w ${VARNISH_MIN_THREADS},${VARNISH_MAX_THREADS} \
+	     -s ${VARNISH_STORAGE} \
+	     -p thread_pool_add_delay=${VARNISH_THREAD_DELAY} -p thread_pools=${VARNISH_THREAD_POOLS} \
+	     -p session_linger=${VARNISH_SESSION_LINGER} -p sess_workspace=${VARNISH_SESSION_WORKSPACE}"
